@@ -1,36 +1,34 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ElevateU – Personalized AI-Powered Learning Platform
+(Still in develop)
 
-## Getting Started
+ElevateU is a web-based educational support system that leverages AI to guide learners through a personalized journey into tech. Our mission is to break down barriers to tech education by offering tailored content, real-time interactions, and a collaborative learning experience.
 
-First, run the development server:
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## 🛠️ Tech Stack
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Frontend
+- **React** – component-based UI
+- **Next.js (App Router)** – server-side rendering and routing
+- **Tailwind CSS** – utility-first styling
+- **CSS Modules** – scoped styling for reusable components
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Backend/Tools
+- **Supabase** – database and API for storing form data
+- **Trussed AI API** – intelligent response generation and recommendation engine
+- **Open AI API**
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Dev Tools
+- **Prettier & ESLint** – code formatting and linting
+- **Vercel** – deployment platform for frontend
 
-## Learn More
+## 📦 Features
 
-To learn more about Next.js, take a look at the following resources:
+- 🧠 AI-powered learning recommendations
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- 🎯 Personalized learning based on goals, style, and time
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 💡 Inspiration
 
-## Deploy on Vercel
+This project was inspired by the challenges students face in navigating the complex world of tech education. By merging intelligent automation and educational support, ElevateU aims to offer clarity, motivation, and progress for all learners.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
