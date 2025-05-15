@@ -56,7 +56,7 @@ export default function DashboardNavbar() {
     {
       label: "Home",
       className: styles.navItem,
-      icon: <HomeIcon size={20} color="#6366f1" />,
+      icon: <HomeIcon size={20} color="white" />,
       href: "/dashboard",
     },
     {
