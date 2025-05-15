@@ -1,0 +1,103 @@
+.wrapper {
+  background-color: #eef2ff; /* tailwind's indigo-50 */
+  padding-top: 7rem;
+  padding-bottom: 4rem;
+  text-align: center;
+}
+
+.heading {
+  font-size: 2.25rem; /* text-4xl */
+  font-weight: 700;
+  color: #1f2937; /* gray-800 */
+  margin-bottom: 1.5rem;
+}
+
+.subheading {
+  font-size: 1.25rem;
+  color: #4b5563; /* gray-600 */
+  max-width: 48rem;
+  margin: 0 auto;
+}
+
+.contentWrapper {
+  max-width: 80rem;
+  margin: 0 auto;
+  padding: 4rem 1rem;
+}
+
+.flexContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
+}
+
+@media (min-width: 768px) {
+  .flexContainer {
+    flex-direction: row;
+    align-items: center;
+    gap: 3rem;
+  }
+}
+
+.left,
+.right {
+  flex: 1;
+}
+
+.sectionTitle {
+  font-size: 1.875rem; /* text-3xl */
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 1rem;
+}
+
+.paragraph {
+  font-size: 1.125rem;
+  color: #4b5563;
+  margin-bottom: 1.5rem;
+}
+
+.card {
+  background: white;
+  padding: 2rem;
+  border-radius: 1rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.checkItem {
+  display: flex;
+  align-items: start;
+  margin-bottom: 1rem;
+}
+
+.checkIcon {
+  color: #4f46e5; /* indigo-600 */
+  width: 1.5rem;
+  height: 1.5rem;
+  margin-top: 0.25rem;
+}
+
+.checkText {
+  margin-left: 0.75rem;
+  color: #4b5563;
+  margin: 0;
+}
+
+.storyBox {
+  background: #4f46e5;
+  color: white;
+  padding: 2rem;
+  border-radius: 1rem;
+  margin-top: 4rem;
+}
+
+.storyTitle {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+
+.storyText {
+  font-size: 1.125rem;
+  margin-bottom: 1.5rem;
+}

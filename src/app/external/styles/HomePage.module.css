@@ -1,0 +1,168 @@
+/* HomePage.module.css */
+
+.textWhite {
+  --tw-text-opacity: 1;
+  color: rgb(255 255 255 / var(--tw-text-opacity, 1));
+}
+
+.toPurple600 {
+  --tw-gradient-to: #9333ea var(--tw-gradient-to-position);
+}
+
+.fromIndigo600 {
+  --tw-gradient-from: #4f46e5 var(--tw-gradient-from-position);
+  --tw-gradient-to: rgb(79 70 229 / 0) var(--tw-gradient-to-position);
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+}
+
+.bgGradientToR {
+  background-image: linear-gradient(to right, var(--tw-gradient-stops));
+}
+
+.Text {
+  background-clip: text;
+  -webkit-background-clip: text;
+  font-size: 3.5rem;
+  /* line-height: 1; */
+
+  /* Responsive for smaller screens */
+
+  @media (max-width: 768px) {
+    font-size: 2.5rem;
+  }
+
+  @media (max-width: 480px) {
+    font-size: 1.4rem;
+  }
+  @media (max-width: 390px) {
+    font-size: 1.3rem;
+  }
+}
+
+.Text2 {
+  background-clip: text;
+  -webkit-background-clip: text;
+  font-size: 2.4rem;
+
+  /* Responsive for smaller screens */
+  @media (max-width: 768px) {
+    font-size: 1.4rem;
+    line-height: 1rem;
+  }
+
+  @media (max-width: 480px) {
+    font-size: 1rem;
+    line-height: 1.2rem;
+  }
+}
+.gradientBackground {
+  --tw-gradient-from: #4f46e5 var(--tw-gradient-from-position);
+  --tw-gradient-to: #9333ea var(--tw-gradient-to-position);
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+  background-image: linear-gradient(to right, var(--tw-gradient-stops));
+  color: white;
+  padding-top: 3.5rem; /* Equivalent to pt-20 */
+  padding-bottom: 3.5rem;
+}
+
+.getStartedBtn {
+  background-color: rgb(93 17 213);
+  color: rgb(255 255 255);
+  padding: 0.75rem 1.5rem; /* py-3 px-6 */
+  border-radius: 9999px; /* rounded-full */
+  font-size: 1.125rem; /* text-lg */
+  font-weight: 500; /* font-medium */
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); /* shadow-md */
+  cursor: pointer;
+  transition-property: color, background-color, border-color,
+    text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter,
+    backdrop-filter, -webkit-text-decoration-color, -webkit-backdrop-filter;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 300ms; /* duration-300 */
+  border: none;
+  font-family: "Poppins", sans-serif;
+}
+
+.getStartedBtn:hover {
+  background-color: rgb(132, 87, 205);
+  transform: scale(1.03);
+}
+
+.sectionWrapper {
+  padding: 4rem 1rem;
+  max-width: 80rem;
+  margin: 0 auto;
+}
+
+.sectionHeader {
+  text-align: center;
+  margin-bottom: 4rem;
+}
+
+.title {
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: #1f2937; /* gray-800 */
+  margin-bottom: 1rem;
+}
+
+.subtitle {
+  font-size: 1.125rem;
+  color: #4b5563; /* gray-600 */
+  max-width: 48rem;
+  margin: 0 auto;
+}
+
+.cardGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+}
+
+@media (min-width: 768px) {
+  .cardGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.card {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  text-align: center;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  cursor: pointer;
+}
+
+.card:hover {
+  transform: scale(1.03);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+.iconWrapper {
+  width: 3rem;
+  height: 3rem;
+  background-color: #e0e7ff; /* indigo-100 */
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1rem auto;
+}
+
+.icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  color: #4f46e5; /* indigo-600 */
+}
+
+.cardTitle {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.cardText {
+  color: #4b5563; /* gray-600 */
+}
