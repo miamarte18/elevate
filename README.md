@@ -1,4 +1,5 @@
 # ElevateU – Personalized AI-Powered Learning Platform
+(Still in develop)
 
 ElevateU is a web-based educational support system that leverages AI to guide learners through a personalized journey into tech. Our mission is to break down barriers to tech education by offering tailored content, real-time interactions, and a collaborative learning experience.
 
