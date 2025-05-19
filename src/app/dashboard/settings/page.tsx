@@ -1,7 +1,82 @@
+"use client";
 import React from "react";
 import styles from "../dashboard.module.css";
+import { useEffect, useState } from "react";
+import { supabase } from "../../../lib/supabase";
 
 const SettingsPage: React.FC = () => {
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
+  const [userId, setUserId] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+
+  useEffect(() => {
+    const getUserData = async () => {
+      const {
+        data: { user },
+        error,
+      } = await supabase.auth.getUser();
+
+      if (error) {
+        console.error("Failed to fetch user:", error.message);
+        return;
+      }
+
+      if (user) {
+        setEmail(user.email || "");
+
+        // Get the username from the 'profiles' table
+        const { data: profile, error: profileError } = await supabase
+          .from("profiles")
+          .select("username")
+          .eq("id", user.id)
+          .single();
+
+        if (profileError) {
+          console.error("Error fetching profile:", profileError.message);
+        } else {
+          setUsername(profile.username);
+        }
+      }
+    };
+
+    getUserData();
+  }, []);
+
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+
+  const handleSaveChanges = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSuccessMessage("");
+    setErrorMessage("");
+
+    if (newPassword !== confirmPassword) {
+      setErrorMessage("New passwords do not match.");
+      return;
+    }
+
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword,
+      });
+
+      if (error) {
+        setErrorMessage("Failed to update password: " + error.message);
+      } else {
+        setSuccessMessage("Your password has been updated successfully.");
+        // Optionally clear password fields
+        setCurrentPassword("");
+        setNewPassword("");
+        setConfirmPassword("");
+      }
+    } catch (err) {
+      setErrorMessage("Something went wrong.");
+    }
+  };
+
   return (
     <div id="dashboard-settings" className={styles.dashboardSection}>
       <div className={styles.headerWrapper}>
@@ -18,8 +93,15 @@ const SettingsPage: React.FC = () => {
           </div>
 
           <div className={styles.cardBody}>
-            <form id="settings-form">
+            <form id="settings-form" onSubmit={handleSaveChanges}>
               <div className={styles.formGroup}>
+                {/* ✅ Show success and error messages */}
+                {successMessage && (
+                  <div className={styles.successMessage}>{successMessage}</div>
+                )}
+                {errorMessage && (
+                  <div className={styles.errorMessage}>{errorMessage}</div>
+                )}
                 <div>
                   <label htmlFor="username" className={styles.label}>
                     Username
@@ -28,9 +110,8 @@ const SettingsPage: React.FC = () => {
                     type="text"
                     name="username"
                     id="username"
-                    value="johnsmith"
+                    value={username}
                     className={styles.input}
-                    disabled
                   />
                 </div>
 
@@ -42,7 +123,7 @@ const SettingsPage: React.FC = () => {
                     type="email"
                     name="email"
                     id="email"
-                    value="john.smith@example.com"
+                    value={email}
                     className={styles.input}
                     disabled
                   />
@@ -56,6 +137,8 @@ const SettingsPage: React.FC = () => {
                     type="password"
                     name="current-password"
                     id="current-password"
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
                     className={styles.input}
                     placeholder="••••••••"
                   />
@@ -69,6 +152,8 @@ const SettingsPage: React.FC = () => {
                     type="password"
                     name="new-password"
                     id="new-password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
                     className={styles.input}
                     placeholder="••••••••"
                   />
@@ -84,7 +169,8 @@ const SettingsPage: React.FC = () => {
                   <input
                     type="password"
                     name="confirm-new-password"
-                    id="confirm-new-password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
                     className={styles.input}
                     placeholder="••••••••"
                   />
@@ -108,7 +194,11 @@ const SettingsPage: React.FC = () => {
                     Download My Survey
                   </button>
 
-                  <button type="submit" className={styles.primaryButton}>
+                  <button
+                    type="submit"
+                    className={styles.primaryButton}
+                    onClick={handleSaveChanges}
+                  >
                     Save Changes
                   </button>
                 </div>

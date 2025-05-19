@@ -140,6 +140,15 @@
   margin-bottom: 0.75rem;
   color: #1f2937;
 }
+.successMessage {
+  color: green;
+  margin-bottom: 1rem;
+}
+
+.errorMessage {
+  color: red;
+  margin-bottom: 1rem;
+}
 
 /* Settings page css */
 /* Settings page css */
