@@ -2,6 +2,7 @@
 import React from "react";
 import styles from "../dashboard.module.css";
 import toast from "react-hot-toast";
+import jsPDF from "jspdf";
 
 import { useEffect, useState } from "react";
 import { supabase } from "../../../lib/supabase";
@@ -50,6 +51,7 @@ const SettingsPage: React.FC = () => {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
+  //function to handle form submission
   const handleSaveChanges = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
@@ -82,6 +84,48 @@ const SettingsPage: React.FC = () => {
       setNewPassword("");
       setConfirmPassword("");
     }
+  };
+  //download survey as pdf
+  const handleDownloadSurveyPDF = async () => {
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser();
+
+    if (error || !user) {
+      toast.error("Unable to fetch user data.");
+      return;
+    }
+
+    const { data: surveyData, error: surveyError } = await supabase
+      .from("survey_responses")
+      .select("*")
+      .eq("user_id", user.id)
+      .single();
+
+    if (surveyError || !surveyData) {
+      toast.error("Survey not found or not completed.");
+      return;
+    }
+
+    const doc = new jsPDF();
+
+    doc.setFontSize(16);
+    doc.text("Your Survey Responses", 10, 10);
+    doc.setFontSize(12);
+
+    let y = 20;
+    for (const [key, value] of Object.entries(surveyData)) {
+      const line = `${key}: ${value}`;
+      doc.text(line, 10, y);
+      y += 10;
+      if (y > 280) {
+        doc.addPage();
+        y = 20;
+      }
+    }
+
+    doc.save("my_survey.pdf");
   };
 
   return (
@@ -177,7 +221,11 @@ const SettingsPage: React.FC = () => {
                 </div>
 
                 <div className={styles.buttonGroup}>
-                  <button type="button" className={styles.secondaryButton}>
+                  <button
+                    type="button"
+                    className={styles.secondaryButton}
+                    onClick={handleDownloadSurveyPDF}
+                  >
                     <svg
                       className={styles.icon}
                       fill="none"
