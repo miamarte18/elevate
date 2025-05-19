@@ -84,7 +84,7 @@ export default function DashboardNavbar() {
     <>
       {/* Hamburger Button */}
       <button
-        className={styles.hamburger}
+        className={styles.hamburger2}
         onClick={() => setIsOpen((prev) => !prev)}
         aria-label="Toggle menu"
       >

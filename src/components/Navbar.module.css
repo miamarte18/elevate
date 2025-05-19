@@ -261,7 +261,7 @@
 
 /* Existing styles... */
 
-.hamburger {
+.hamburger2 {
   position: fixed;
   /* top: 1rem; */
   /* left: 1rem; */
@@ -277,7 +277,7 @@
 }
 
 @media (min-width: 768px) {
-  .hamburger {
+  .hamburger2 {
     display: none;
   }
 }
@@ -288,7 +288,7 @@
     height: auto;
     display: block;
   }
-  .hamburger {
+  .hamburger2 {
     display: none;
   }
 }

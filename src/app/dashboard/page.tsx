@@ -14,25 +14,35 @@ export default function DashboardPage() {
   const [username, setUsername] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!isLoading && session?.user) {
-      const fetchUsername = async () => {
-        const { data, error } = await supabase
-          .from("profiles")
-          .select("username")
-          .eq("id", session.user.id)
-          .maybeSingle();
+    try {
+      if (!isLoading && session?.user) {
+        const fetchUsername = async () => {
+          const { data, error } = await supabase
+            .from("profiles")
+            .select("username")
+            .eq("id", session.user.id)
+            .maybeSingle();
 
-        if (data) {
-          setUsername(data.username);
-        } else {
-          console.error("Failed to fetch username:", error?.message);
-        }
-      };
+          console.log("Fetching username for user id:", session.user.id);
+          console.log("Returned data:", data);
+          console.log("Returned error:", error);
 
-      fetchUsername();
-      setUser(session.user);
-    } else if (!isLoading && !session?.user) {
-      router.push("/external/login");
+          if (error) {
+            console.error("Supabase error:", error.message);
+          }
+          if (data) {
+            setUsername(data.username);
+          } else {
+            console.error("Failed to fetch username:", error?.message);
+          }
+        };
+        fetchUsername();
+        setUser(session.user);
+      } else if (!isLoading && !session?.user) {
+        router.push("/external/login");
+      }
+    } catch (err) {
+      console.error("Unexpected error during fetchUsername:", err);
     }
   }, [session, isLoading, router]);
 

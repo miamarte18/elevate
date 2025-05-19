@@ -156,6 +156,7 @@ const SettingsPage: React.FC = () => {
                     id="username"
                     value={username}
                     className={styles.input}
+                    disabled
                   />
                 </div>
 
