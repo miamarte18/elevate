@@ -5,6 +5,7 @@ import { useSessionContext } from "@supabase/auth-helpers-react";
 import { useRouter } from "next/navigation";
 import { User } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import styles from "./dashboard.module.css";
 
 export default function DashboardPage() {
@@ -12,7 +13,7 @@ export default function DashboardPage() {
   const { session, isLoading } = useSessionContext();
   const router = useRouter();
   const [username, setUsername] = useState<string | null>(null);
-
+  const supabase = createClientComponentClient();
   useEffect(() => {
     try {
       if (!isLoading && session?.user) {
@@ -21,7 +22,7 @@ export default function DashboardPage() {
             .from("profiles")
             .select("username")
             .eq("id", session.user.id)
-            .maybeSingle();
+            .maybeSingle(); // safer, doesn’t throw if no row
 
           console.log("Fetching username for user id:", session.user.id);
           console.log("Returned data:", data);
@@ -29,11 +30,10 @@ export default function DashboardPage() {
 
           if (error) {
             console.error("Supabase error:", error.message);
-          }
-          if (data) {
+          } else if (data) {
             setUsername(data.username);
           } else {
-            console.error("Failed to fetch username:", error?.message);
+            console.warn("No profile found for user.");
           }
         };
         fetchUsername();
@@ -44,7 +44,7 @@ export default function DashboardPage() {
     } catch (err) {
       console.error("Unexpected error during fetchUsername:", err);
     }
-  }, [session, isLoading, router]);
+  }, [session, isLoading, router, supabase]);
 
   if (isLoading || !user) {
     return <p>Loading...</p>;

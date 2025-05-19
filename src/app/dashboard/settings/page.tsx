@@ -6,6 +6,7 @@ import jsPDF from "jspdf";
 
 import { useEffect, useState } from "react";
 import { supabase } from "../../../lib/supabase";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
 const SettingsPage: React.FC = () => {
   const [username, setUsername] = useState("");
@@ -13,6 +14,7 @@ const SettingsPage: React.FC = () => {
   const [userId, setUserId] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const supabase = createClientComponentClient();
 
   useEffect(() => {
     const getUserData = async () => {
@@ -45,7 +47,7 @@ const SettingsPage: React.FC = () => {
     };
 
     getUserData();
-  }, []);
+  }, [supabase]);
 
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");

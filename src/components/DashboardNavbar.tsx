@@ -14,10 +14,11 @@ import {
   MenuIcon, // hamburger icon
   XIcon, // close icon
 } from "lucide-react";
-
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import styles from "./Navbar.module.css";
 
 export default function DashboardNavbar() {
+  const supabase = createClientComponentClient();
   const { session, isLoading } = useSessionContext();
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);

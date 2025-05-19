@@ -13,13 +13,9 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body>
-        <div className="flex min-h-screen bg-gray-100">
-          <DashboardNavbar />
-          <main className="ml-64 flex-1 p-6">{children}</main>
-        </div>
-      </body>
-    </html>
+    <div className="flex min-h-screen bg-gray-100">
+      <DashboardNavbar />
+      <main className="ml-64 flex-1 p-6">{children}</main>
+    </div>
   );
 }
