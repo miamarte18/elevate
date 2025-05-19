@@ -24,15 +24,15 @@ export default function HomePage({ children }: { children: React.ReactNode }) {
   console.log("🔧 External Layout is rendering");
 
   return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        <SupabaseProvider initialSession={null}>
-          <Navbar /> {/* ✅ Add Navbar here */}
-          <main>{children}</main>
-        </SupabaseProvider>
-      </body>
-    </html>
+    // <html lang="en">
+    //   <body
+    //     className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+    //   >
+    <SupabaseProvider initialSession={null}>
+      <Navbar /> {/* ✅ Add Navbar here */}
+      <main>{children}</main>
+    </SupabaseProvider>
+    //   </body>
+    // </html>
   );
 }

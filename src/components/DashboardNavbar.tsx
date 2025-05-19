@@ -101,7 +101,9 @@ export default function DashboardNavbar() {
       {/* Sidebar */}
       <aside
         className={`${styles.sidebar} ${isOpen ? styles.sidebarOpen : ""}`}
-        onClick={() => setIsOpen(false)} // auto-close on nav click
+        onClick={() => {
+          if (window.innerWidth < 768) setIsOpen(false);
+        }} // auto-close on nav click
       >
         {/* Profile Section */}
         <div className={styles.profileSection}>
