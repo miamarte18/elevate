@@ -1,6 +1,8 @@
 "use client";
 import React from "react";
 import styles from "../dashboard.module.css";
+import toast from "react-hot-toast";
+
 import { useEffect, useState } from "react";
 import { supabase } from "../../../lib/supabase";
 
@@ -48,32 +50,37 @@ const SettingsPage: React.FC = () => {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  const handleSaveChanges = async (e: React.FormEvent) => {
+  const handleSaveChanges = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setSuccessMessage("");
-    setErrorMessage("");
 
     if (newPassword !== confirmPassword) {
       setErrorMessage("New passwords do not match.");
       return;
     }
+    const { data: sessionData } = await supabase.auth.getSession();
+    const userEmail = sessionData?.session?.user?.email;
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: userEmail || "",
+      password: currentPassword,
+    });
 
-    try {
-      const { error } = await supabase.auth.updateUser({
-        password: newPassword,
-      });
+    if (signInError) {
+      toast.error("Current password is incorrect.");
+      return;
+    }
 
-      if (error) {
-        setErrorMessage("Failed to update password: " + error.message);
-      } else {
-        setSuccessMessage("Your password has been updated successfully.");
-        // Optionally clear password fields
-        setCurrentPassword("");
-        setNewPassword("");
-        setConfirmPassword("");
-      }
-    } catch (err) {
-      setErrorMessage("Something went wrong.");
+    const { error } = await supabase.auth.updateUser({
+      password: newPassword,
+    });
+
+    if (error) {
+      toast.error("Failed to update password: " + error.message);
+    } else {
+      toast.success("Your password has been updated successfully.");
+      // Optionally clear password fields
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
     }
   };
 
@@ -95,13 +102,6 @@ const SettingsPage: React.FC = () => {
           <div className={styles.cardBody}>
             <form id="settings-form" onSubmit={handleSaveChanges}>
               <div className={styles.formGroup}>
-                {/* ✅ Show success and error messages */}
-                {successMessage && (
-                  <div className={styles.successMessage}>{successMessage}</div>
-                )}
-                {errorMessage && (
-                  <div className={styles.errorMessage}>{errorMessage}</div>
-                )}
                 <div>
                   <label htmlFor="username" className={styles.label}>
                     Username
@@ -194,11 +194,7 @@ const SettingsPage: React.FC = () => {
                     Download My Survey
                   </button>
 
-                  <button
-                    type="submit"
-                    className={styles.primaryButton}
-                    onClick={handleSaveChanges}
-                  >
+                  <button type="submit" className={styles.primaryButton}>
                     Save Changes
                   </button>
                 </div>
