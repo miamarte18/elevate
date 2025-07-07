@@ -70,6 +70,7 @@ export default function DashboardNavbar() {
       label: "Regenerate",
 
       icon: <RefreshCwIcon size={20} />,
+      href: "/external/survey?edit=true",
       onClick: () => {
         console.log("Regenerate clicked");
       },

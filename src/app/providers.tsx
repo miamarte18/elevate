@@ -1,3 +1,4 @@
+// src/app/providers.tsx
 "use client";
 
 import { SessionContextProvider } from "@supabase/auth-helpers-react";

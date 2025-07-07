@@ -2,65 +2,84 @@
 
 import { useEffect, useState } from "react";
 import { useSessionContext } from "@supabase/auth-helpers-react";
-import { useRouter } from "next/navigation";
-import { User } from "@supabase/supabase-js";
+
 import { supabase } from "@/lib/supabase";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+
 import styles from "./dashboard.module.css";
-
+import ProtectedRoute from "@/components/ProtectedRoute";
 export default function DashboardPage() {
-  const [user, setUser] = useState<User | null>(null);
-  const { session, isLoading } = useSessionContext();
-  const router = useRouter();
+  const { session } = useSessionContext();
   const [username, setUsername] = useState<string | null>(null);
-  const supabase = createClientComponentClient();
+  const user = session?.user;
+
+  // useEffect(() => {
+  //   try {
+  //     if (!isLoading && session?.user) {
+  //       setUser(session.user);
+
+  //       const fetchUsername = async () => {
+  //         const { data, error } = await supabase
+  //           .from("profiles")
+  //           .select("username")
+  //           .eq("id", session.user.id)
+  //           .maybeSingle(); // safer, doesn’t throw if no row
+
+  //         console.log("Fetching username for user id:", session.user.id);
+  //         console.log("Returned data:", data);
+  //         console.log("Returned error:", error);
+
+  //         if (error) {
+  //           console.error("Supabase error:", error.message);
+  //         } else if (data) {
+  //           setUsername(data.username);
+  //         } else {
+  //           console.warn("No profile found for user.");
+  //         }
+  //       };
+  //       fetchUsername();
+  //       setUser(session.user);
+  //     } else if (!isLoading && !session?.user) {
+  //       router.push("/external/login");
+  //     }
+  //   } catch (err) {
+  //     console.error("Unexpected error during fetchUsername:", err);
+  //   }
+  // }, [session, isLoading, router, supabase]);
   useEffect(() => {
-    try {
-      if (!isLoading && session?.user) {
-        const fetchUsername = async () => {
-          const { data, error } = await supabase
-            .from("profiles")
-            .select("username")
-            .eq("id", session.user.id)
-            .maybeSingle(); // safer, doesn’t throw if no row
+    const fetchUsername = async () => {
+      if (!user) return;
 
-          console.log("Fetching username for user id:", session.user.id);
-          console.log("Returned data:", data);
-          console.log("Returned error:", error);
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("username")
+        .eq("id", user.id)
+        .maybeSingle();
 
-          if (error) {
-            console.error("Supabase error:", error.message);
-          } else if (data) {
-            setUsername(data.username);
-          } else {
-            console.warn("No profile found for user.");
-          }
-        };
-        fetchUsername();
-        setUser(session.user);
-      } else if (!isLoading && !session?.user) {
-        router.push("/external/login");
+      if (error) {
+        console.error("Error fetching username:", error.message);
+      } else if (data) {
+        setUsername(data.username);
       }
-    } catch (err) {
-      console.error("Unexpected error during fetchUsername:", err);
-    }
-  }, [session, isLoading, router, supabase]);
+    };
 
-  if (isLoading || !user) {
-    return <p>Loading...</p>;
-  }
+    fetchUsername();
+  }, [user]);
+
+  if (!user) return <div>Loading...</div>;
 
   return (
     <div className={styles.container}>
       {/* Header */}
-      <div>
-        <h1 className={styles.header}>
-          Welcome back, {username ?? user.email}!
-        </h1>
-        <p className={styles.subtext}>
-          Here are your personalized learning recommendations.
-        </p>
-      </div>
+      <ProtectedRoute>
+        <div>
+          <h1 className={styles.header}>
+            Welcome back, {username ?? user.email}!
+          </h1>
+          <p className={styles.subtext}>
+            Here are your personalized learning recommendations.
+          </p>
+        </div>
+      </ProtectedRoute>
 
       {/* Progress Card */}
       <div className={styles.card}>

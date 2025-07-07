@@ -80,54 +80,107 @@ const SettingsPage: React.FC = () => {
     if (error) {
       toast.error("Failed to update password: " + error.message);
     } else {
-      toast.success("Your password has been updated successfully.");
-      // Optionally clear password fields
+      toast.success("Password updated successfully! You will be logged out for security reasons.");
+      
+      // Clear password fields
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
+      
+      // Show a warning toast and then sign out after a delay
+      setTimeout(() => {
+        toast("Signing you out for security...", {
+          icon: "🔒",
+          duration: 2000,
+        });
+        setTimeout(async () => {
+          await supabase.auth.signOut();
+          window.location.href = "/external/login";
+        }, 2000);
+      }, 2000);
     }
   };
   //download survey as pdf
   const handleDownloadSurveyPDF = async () => {
-    const {
-      data: { user },
-      error,
-    } = await supabase.auth.getUser();
+    try {
+      const {
+        data: { user },
+        error,
+      } = await supabase.auth.getUser();
 
-    if (error || !user) {
-      toast.error("Unable to fetch user data.");
-      return;
-    }
-
-    const { data: surveyData, error: surveyError } = await supabase
-      .from("survey_responses")
-      .select("*")
-      .eq("user_id", user.id)
-      .single();
-
-    if (surveyError || !surveyData) {
-      toast.error("Survey not found or not completed.");
-      return;
-    }
-
-    const doc = new jsPDF();
-
-    doc.setFontSize(16);
-    doc.text("Your Survey Responses", 10, 10);
-    doc.setFontSize(12);
-
-    let y = 20;
-    for (const [key, value] of Object.entries(surveyData)) {
-      const line = `${key}: ${value}`;
-      doc.text(line, 10, y);
-      y += 10;
-      if (y > 280) {
-        doc.addPage();
-        y = 20;
+      if (error || !user) {
+        toast.error("Unable to fetch user data.");
+        return;
       }
-    }
 
-    doc.save("my_survey.pdf");
+      console.log("Fetching survey for user:", user.id);
+
+      // Try to get survey data with better error handling - get the most recent one
+      const { data: surveyData, error: surveyError } = await supabase
+        .from("survey_responses")
+        .select("experience, interests, learning_style, time_commitment, goal, inserted_at, updated_at")
+        .eq("user_id", user.id)
+        .order("inserted_at", { ascending: false })
+        .limit(1)
+        .single();
+
+      console.log("Survey query result:", { surveyData, surveyError });
+
+      if (surveyError) {
+        console.error("Survey error:", surveyError);
+        if (surveyError.code === "PGRST116") {
+          toast.error("No survey found. Please complete your survey first.");
+        } else {
+          toast.error("Error fetching survey: " + surveyError.message);
+        }
+        return;
+      }
+
+      if (!surveyData) {
+        toast.error("Survey not found or not completed.");
+        return;
+      }
+
+      const doc = new jsPDF();
+
+      doc.setFontSize(16);
+      doc.text("Your Survey Responses", 10, 20);
+      doc.setFontSize(12);
+
+      // Add completion date if available
+      if (surveyData.inserted_at) {
+        const completionDate = new Date(surveyData.inserted_at).toLocaleDateString();
+        doc.text(`Completed on: ${completionDate}`, 10, 30);
+      }
+
+      let y = 50;
+      
+      // Create a more readable format
+      const surveyFields = [
+        { key: "experience", label: "Experience Level" },
+        { key: "interests", label: "Interests" },
+        { key: "learning_style", label: "Learning Style" },
+        { key: "time_commitment", label: "Time Commitment" },
+        { key: "goal", label: "Goal" },
+      ];
+
+      surveyFields.forEach(({ key, label }) => {
+        if (surveyData[key as keyof typeof surveyData]) {
+          doc.text(`${label}: ${surveyData[key as keyof typeof surveyData]}`, 10, y);
+          y += 15;
+          if (y > 250) {
+            doc.addPage();
+            y = 20;
+          }
+        }
+      });
+
+      doc.save("my_survey_responses.pdf");
+      toast.success("Survey downloaded successfully!");
+    } catch (error) {
+      console.error("Error downloading survey:", error);
+      toast.error("Failed to download survey. Please try again.");
+    }
   };
 
   return (

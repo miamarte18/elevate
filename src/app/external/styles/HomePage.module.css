@@ -56,9 +56,10 @@
   }
 }
 .gradientBackground {
-  --tw-gradient-from: #4f46e5 var(--tw-gradient-from-position);
-  --tw-gradient-to: #9333ea var(--tw-gradient-to-position);
+  --tw-gradient-from: #4f46e5;
+  --tw-gradient-to: #9333ea;
   --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+
   background-image: linear-gradient(to right, var(--tw-gradient-stops));
   color: white;
   padding-top: 3.5rem; /* Equivalent to pt-20 */

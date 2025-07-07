@@ -1,73 +1,121 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { supabase } from "lib/supabase";
-import { useSessionContext } from "@supabase/auth-helpers-react";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import styles from "../styles/SurveyPage.module.css";
-
+import { useSurveyForm } from "@/app/external/survey/hooks/useSurveyForm";
+import { useEffect } from "react";
 export default function SurveyPage() {
-  const router = useRouter();
-  const { session, isLoading } = useSessionContext();
+  const {
+    session,
+    router,
+    form,
+    updateForm,
+    checkingSurvey,
+    surveyData,
+    isLoading,
+    supabase,
+  } = useSurveyForm();
 
-  const [experience, setExperience] = useState("");
-  const [interests, setInterests] = useState("");
-  const [learningStyle, setLearningStyle] = useState("");
-  const [timeCommitment, setTimeCommitment] = useState("");
-  const [goal, setGoal] = useState("");
-  const [checkingSurvey, setCheckingSurvey] = useState(true);
-  const [hasSubmitted, setHasSubmitted] = useState(false);
-
-  useEffect(() => {
-    const checkSurvey = async () => {
-      if (!session?.user) return;
-      try {
-        const { data, error } = await supabase
-          .from("survey_responses")
-          .select("id")
-          .eq("user_id", session.user.id)
-          .single();
-
-        if (data) {
-          setHasSubmitted(true);
-          router.push("/dashboard");
-        } else {
-          setCheckingSurvey(false);
-        }
-      } catch (error) {
-        console.error("Error checking survey status", error);
-        setCheckingSurvey(false);
-      }
-    };
-
-    checkSurvey();
-  }, [session, router]);
+  // ✅ Wait until both Supabase session + survey check are complete
+  const isLoadingSession = isLoading || checkingSurvey;
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!session?.user || hasSubmitted) return;
 
-    const { error } = await supabase.from("survey_responses").insert({
+    if (!session?.user) {
+      toast.error("User session not found. Please log in again.");
+      return;
+    }
+
+    if (
+      !form.experience ||
+      !form.interests ||
+      !form.learningStyle ||
+      !form.timeCommitment ||
+      !form.goal
+    ) {
+      toast.error("🚨 Please complete all fields before submitting.");
+      return;
+    }
+
+    const payload = {
       user_id: session.user.id,
-      experience,
-      interests,
-      learning_style: learningStyle,
-      time_commitment: timeCommitment,
-      goal,
-    });
+      experience: form.experience,
+      interests: form.interests,
+      learning_style: form.learningStyle,
+      time_commitment: form.timeCommitment,
+      goal: form.goal,
+    };
+    try {
+      //First we check if theres exisiting survey data for the user
 
-    if (error) {
-      console.error("Error submitting survey", error);
-    } else {
-      setHasSubmitted(true);
-      router.push("/dashboard");
+      let response;
+
+      if (surveyData) {
+        //if the user already has survey data, update it
+        response = await supabase
+          .from("survey_responses")
+          .update(payload)
+          .eq("id", surveyData.id);
+      } else {
+        //if no existing data, we insert a new record
+        response = await supabase.from("survey_responses").insert(payload);
+      }
+
+      if (response.error) {
+        toast.error(`Error saving your responses: ${response.error.message}`);
+        return;
+      }
+
+      // Update the profiles table to mark survey as completed
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .update({ has_completed_survey: true })
+        .eq("id", session.user.id);
+
+      if (profileError) {
+        console.error("Error updating profile:", profileError);
+        toast.error(
+          "Survey saved but there was an issue updating your profile."
+        );
+        return;
+      }
+
+      toast.success("🎉 Your responses have been saved successfully!");
+
+      // Use replace instead of push to avoid back button issues
+      // Add a small delay to ensure the database update has propagated
+      setTimeout(() => {
+        router.replace("/dashboard");
+      }, 1000);
+    } catch (error) {
+      toast.error("An error ocurred while submitting your survey.");
     }
   };
 
-  if (checkingSurvey || isLoading) return <div>Loading...</div>;
+  // 🔒 Show loading UI while checking session and survey state
+  if (isLoadingSession) {
+    return (
+      <div className={styles.page}>
+        <ToastContainer autoClose={3000} />
+        <p>🔄 Loading your survey data...</p>
+      </div>
+    );
+  }
+
+  // // Show spinner and toast while session is being determined
+  // useEffect(() => {
+  //   if (!session?.user) {
+  //     toast.info("Checking your survey...", { toastId: "session-loading" });
+  //   } else {
+  //     toast.dismiss("session-loading");
+  //   }
+  // }, [session?.user]);
 
   return (
     <div id="survey" className={styles.page}>
+      <ToastContainer autoClose={3000} />
       <div className={styles.container}>
         <div className={styles.card}>
           <div className={styles.header}>
@@ -78,33 +126,29 @@ export default function SurveyPage() {
           </div>
 
           <form onSubmit={handleSubmit} className={styles.form}>
-            <div className={styles.section}>
-              <h3>1. What is your current experience level in tech?</h3>
-              {["beginner", "intermediate", "advanced"].map((level) => (
-                <div className={styles.label}>
-                  <label key={level} className={styles.radioLabel}>
-                    <input
-                      type="radio"
-                      name="experience"
-                      value={level}
-                      checked={experience === level}
-                      onChange={(e) => setExperience(e.target.value)}
-                    />
-                    {level === "beginner" && "Beginner (New to tech)"}
-                    {level === "intermediate" &&
-                      "Intermediate (Some experience)"}
-                    {level === "advanced" &&
-                      "Advanced (Experienced professional)"}
-                  </label>
-                </div>
-              ))}
-            </div>
+            <SurveySection
+              title="1. What is your current experience level in tech?"
+              options={[
+                { value: "beginner", label: "Beginner (New to tech)" },
+                {
+                  value: "intermediate",
+                  label: "Intermediate (Some experience)",
+                },
+                {
+                  value: "advanced",
+                  label: "Advanced (Experienced professional)",
+                },
+              ]}
+              name="experience"
+              selectedValue={form.experience}
+              onChange={updateForm}
+            />
 
             <div className={styles.section}>
               <h3>2. What area of tech are you most interested in?</h3>
               <select
-                value={interests}
-                onChange={(e) => setInterests(e.target.value)}
+                value={form.interests}
+                onChange={(e) => updateForm("interests", e.target.value)}
                 className={styles.select}
               >
                 <option value="">Select an area</option>
@@ -123,73 +167,86 @@ export default function SurveyPage() {
               </select>
             </div>
 
-            <div className={styles.section}>
-              <h3>3. What is your preferred learning style?</h3>
-              {["video", "articles", "interactive"].map((style) => (
-                <div className={styles.label}>
-                  <label key={style} className={styles.radioLabel}>
-                    <input
-                      type="radio"
-                      name="learningStyle"
-                      value={style}
-                      checked={learningStyle === style}
-                      onChange={(e) => setLearningStyle(e.target.value)}
-                    />
-                    {style === "video" && "Video tutorials"}
-                    {style === "articles" && "Articles and written guides"}
-                    {style === "interactive" &&
-                      "Interactive projects and exercises"}
-                  </label>
-                </div>
-              ))}
-            </div>
+            <SurveySection
+              title="3. What is your preferred learning style?"
+              options={[
+                { value: "video", label: "Video tutorials" },
+                { value: "articles", label: "Articles and written guides" },
+                {
+                  value: "interactive",
+                  label: "Interactive projects and exercises",
+                },
+              ]}
+              name="learningStyle"
+              selectedValue={form.learningStyle}
+              onChange={updateForm}
+            />
 
             <div className={styles.section}>
               <h3>4. How much time can you dedicate to learning each week?</h3>
               <select
-                value={timeCommitment}
-                onChange={(e) => setTimeCommitment(e.target.value)}
+                value={form.timeCommitment}
+                onChange={(e) => updateForm("timeCommitment", e.target.value)}
                 className={styles.select}
               >
                 <option value="">Select time commitment</option>
-                <option value="1-3">1-3 hours per week</option>
-                <option value="4-7">4-7 hours per week</option>
-                <option value="8-15">8-15 hours per week</option>
+                <option value="1-3">1–3 hours per week</option>
+                <option value="4-7">4–7 hours per week</option>
+                <option value="8-15">8–15 hours per week</option>
                 <option value="16+">16+ hours per week</option>
               </select>
             </div>
 
             <div className={styles.section}>
-              <h3>5. What is your goal in the next 6 months?</h3>
-              {["job", "portfolio", "skills", "explore"].map((g) => (
-                <div className={styles.label}>
-                  <label key={g} className={styles.radioLabel}>
-                    <input
-                      type="radio"
-                      name="goal"
-                      value={g}
-                      checked={goal === g}
-                      onChange={(e) => setGoal(e.target.value)}
-                    />
-                    {g === "job" && "Get a job in tech"}
-                    {g === "portfolio" && "Build a portfolio of projects"}
-                    {g === "skills" && "Improve my current skills"}
-                    {g === "explore" && "Just exploring tech"}
-                  </label>
-                </div>
-              ))}
+              <h3>5. What is your main learning goal?</h3>
+              <textarea
+                value={form.goal}
+                onChange={(e) => updateForm("goal", e.target.value)}
+                className={styles.textarea}
+                placeholder="e.g. Become a full-stack developer"
+              />
             </div>
 
-            <button
-              type="submit"
-              className={styles.submitButton}
-              disabled={hasSubmitted}
-            >
-              Submit and Get My Recommendations
+            <button type="submit" className={styles.submitButton}>
+              Submit
             </button>
           </form>
         </div>
       </div>
+    </div>
+  );
+}
+
+function SurveySection({
+  title,
+  options,
+  name,
+  selectedValue,
+  onChange,
+}: {
+  title: string;
+  options: { value: string; label: string }[];
+  name: string;
+  selectedValue: string;
+  onChange: (field: string, value: string) => void;
+}) {
+  return (
+    <div className={styles.section}>
+      <h3>{title}</h3>
+      {options.map(({ value, label }) => (
+        <div key={value} className={styles.label}>
+          <label className={styles.radioLabel}>
+            <input
+              type="radio"
+              name={name}
+              value={value}
+              checked={selectedValue === value}
+              onChange={() => onChange(name, value)}
+            />
+            {label}
+          </label>
+        </div>
+      ))}
     </div>
   );
 }

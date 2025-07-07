@@ -1,11 +1,11 @@
 "use client";
-export const dynamic = "force-static";
+
 export const revalidate = 0;
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "lib/supabase";
-
+import { supabase } from "@/lib/supabase";
+import { toast } from "react-hot-toast";
 import styles from "./Signup.module.css";
 import logo from "../../public/ElevateU2.png";
 
@@ -14,41 +14,73 @@ export default function SignUpPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
 
-    if (!email || !password) {
+    if (!email || !password || !username) {
       alert("Please enter both email and password.");
       return;
     }
 
+    // ✅ Check if username is already taken BEFORE signing up
+    const { data: existingUser, error: fetchError } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("username", username)
+      .maybeSingle();
+
+    if (fetchError) {
+      alert("Error checking username: " + fetchError.message);
+      return;
+    }
+
+    if (existingUser) {
+      alert("Username is already taken. Please choose another.");
+      return;
+    }
+
+    // 🔐 Now sign up the user
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        data: {
+          username,
+        },
+      },
     });
+
+    console.log("Sign up result:", data, error);
 
     if (error) {
       alert(error.message);
+      setLoading(false);
       return;
     }
-    const user = data.user;
 
+    const user = data.user;
     if (user) {
-      const { error: profileError } = await supabase.from("profiles").insert([
-        {
-          id: user.id, // assuming 'id' is the primary key in your profile table and matches auth user ID
-          username: username,
-        },
-      ]);
+      // Create the profile immediately since email confirmation is disabled
+      const { error: profileError } = await supabase.from("profiles").insert({
+        id: user.id,
+        username,
+        email,
+      });
 
       if (profileError) {
-        alert("Error creating profile: " + profileError.message);
-        return;
+        alert(profileError.message);
+      } else {
+        toast.success("Account created successfully! Please log in.");
+        router.push("/external/login");
       }
+    } else {
+      alert("No user returned — something went wrong.");
     }
-    // ✅ After sign-up, Supabase will auto-login (if email verification is OFF)
-    router.push("/external/survey");
+
+    setLoading(false);
   };
 
   return (
@@ -88,8 +120,8 @@ export default function SignUpPage() {
             onChange={(e) => setPassword(e.target.value)}
             className={styles.input}
           />
-          <button type="submit" className={styles.button}>
-            Sign Up
+          <button type="submit" disabled={loading} className={styles.button}>
+            {loading ? "Signing up..." : "Sign Up"}
           </button>
         </form>
       </div>

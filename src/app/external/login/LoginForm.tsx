@@ -1,63 +1,59 @@
 "use client";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { useSupabaseClient } from "@supabase/auth-helpers-react";
+import { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabase";
 import styles from "./Login.module.css";
 import logo from "../../public/ElevateU2.png";
-
+import { SupabaseAuthClient } from "@supabase/supabase-js/dist/module/lib/SupabaseAuthClient";
+import toast from "react-hot-toast";
 export default function LoginPage() {
   const router = useRouter();
-  const supabase = useSupabaseClient();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  // const [rememberMe, setRememberMe] = useState(false);
 
-  const handleLogin = async () => {
+  // useEffect(() => {
+  //   const rememberedEmail = localStorage.getItem("rememberedEmail");
+  //   if (rememberedEmail) {
+  //     setEmail(rememberedEmail);
+  //     setRememberMe(true);
+  //   }
+  // }, []);
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
     setLoading(true);
     setError("");
 
-    const { data: authData, error: authError } =
-      await supabase.auth.signInWithPassword({
-        email,
-        password,
+    try {
+      console.log("Attempting login with email:", email);
+
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password: password.trim(),
       });
 
-    if (authError) {
-      setError(authError.message);
-      setLoading(false);
-      return;
-    }
-
-    const user = authData?.user;
-    if (!user) {
-      setError("Login failed: No user returned.");
-      setLoading(false);
-      return;
-    }
-
-    // ✅ Check if user has completed the survey
-    const { data: surveyData, error: surveyError } = await supabase
-      .from("survey_responses")
-      .select("id")
-      .eq("user_id", user.id);
-
-    if (surveyError) {
-      setError("Error checking survey status.");
-      setLoading(false);
-      return;
-    }
-
-    // ✅ Redirect based on whether survey exists
-    if (surveyData.length === 0) {
-      router.push("/auth-check");
-    } else {
-      router.push("/dashboard");
+      if (error) {
+        console.error("Login error:", error);
+        setError(error.message);
+        toast.error("Login failed: " + error.message);
+      } else {
+        console.log("Login successful:", data);
+        toast.success("Logged in successfully!");
+        router.push("/dashboard");
+        router.refresh();
+      }
+    } catch (err) {
+      console.error("Unexpected error during login:", err);
+      setError("An unexpected error occurred. Please try again.");
+      toast.error("An unexpected error occurred. Please try again.");
     }
 
     setLoading(false);
   };
-
   return (
     <div className={styles.container}>
       <div className={styles.card}>
@@ -89,6 +85,18 @@ export default function LoginPage() {
               onChange={(e) => setPassword(e.target.value)}
             />
           </div>
+          {/*           
+          <div className={styles.rememberMeWrapper}>
+            <label className={styles.rememberMeLabel}>
+              <input
+                type="checkbox"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+              />
+              Remember me
+            </label> 
+          </div> */}
+
           <div className={styles.buttonGroup}>
             <button
               onClick={handleLogin}
@@ -98,6 +106,7 @@ export default function LoginPage() {
               {loading ? "Loading..." : "Login"}
             </button>
           </div>
+
           {error && <p className={styles.error}>{error}</p>}
         </div>
       </div>

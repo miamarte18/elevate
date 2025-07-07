@@ -1,6 +1,7 @@
 // src/app/dashboard/layout.tsx
 import DashboardNavbar from "@/components/DashboardNavbar"; // your internal navbar
 import "@/app/globals.css";
+import ClientAuthWrapper from "@/components/ClientAuthWrapper";
 
 export const metadata = {
   title: "Dashboard",
