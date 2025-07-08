@@ -84,11 +84,36 @@ export default function SurveyPage() {
 
       toast.success("🎉 Your responses have been saved successfully!");
 
+      // Generate roadmap after successful survey submission
+      try {
+        const roadmapResponse = await fetch("/api/generate-roadmap", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ userId: session.user.id }),
+        });
+
+        if (!roadmapResponse.ok) {
+          console.error("Failed to generate roadmap");
+          toast.error(
+            "Survey saved but couldn't generate your roadmap. You can generate it from the dashboard."
+          );
+        } else {
+          toast.success("🚀 Your personalized roadmap has been generated!");
+        }
+      } catch (roadmapError) {
+        console.error("Error generating roadmap:", roadmapError);
+        toast.error(
+          "Survey saved but couldn't generate your roadmap. You can generate it from the dashboard."
+        );
+      }
+
       // Use replace instead of push to avoid back button issues
       // Add a small delay to ensure the database update has propagated
       setTimeout(() => {
         router.replace("/dashboard");
-      }, 1000);
+      }, 2000); // Increased delay to allow roadmap generation
     } catch (error) {
       toast.error("An error ocurred while submitting your survey.");
     }

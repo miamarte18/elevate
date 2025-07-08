@@ -7,10 +7,22 @@ import { supabase } from "@/lib/supabase";
 
 import styles from "./dashboard.module.css";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { useRoadmap } from "./hooks/useRoadmap";
+import RoadmapCard from "./components/RoadmapCard";
 export default function DashboardPage() {
   const { session } = useSessionContext();
   const [username, setUsername] = useState<string | null>(null);
   const user = session?.user;
+
+  // Use the roadmap hook
+  const {
+    roadmapData,
+    isLoading: isLoadingRoadmap,
+    isGenerating,
+    error: roadmapError,
+    generateRoadmap,
+    updateResourceCompletion,
+  } = useRoadmap();
 
   // useEffect(() => {
   //   try {
@@ -67,6 +79,85 @@ export default function DashboardPage() {
 
   if (!user) return <div>Loading...</div>;
 
+  // Loading state for roadmap
+  if (isLoadingRoadmap) {
+    return (
+      <div className={styles.container}>
+        <ProtectedRoute>
+          <div className={styles.loadingContainer}>
+            <div className={styles.loadingSpinner}></div>
+            <p>Loading your personalized roadmap...</p>
+          </div>
+        </ProtectedRoute>
+      </div>
+    );
+  }
+
+  // Error state
+  if (roadmapError) {
+    return (
+      <div className={styles.container}>
+        <ProtectedRoute>
+          <div className={styles.errorContainer}>
+            <h2 className={styles.errorMessage}>Error loading roadmap</h2>
+            <p>{roadmapError}</p>
+            <button
+              onClick={generateRoadmap}
+              disabled={isGenerating}
+              className={styles.generateButton}
+            >
+              {isGenerating ? "Generating..." : "Try Again"}
+            </button>
+          </div>
+        </ProtectedRoute>
+      </div>
+    );
+  }
+
+  // No roadmap state
+  if (!roadmapData) {
+    return (
+      <div className={styles.container}>
+        <ProtectedRoute>
+          <div>
+            <h1 className={styles.header}>
+              Welcome back, {username ?? user.email}!
+            </h1>
+            <p className={styles.subtext}>
+              Let's create your personalized learning roadmap.
+            </p>
+          </div>
+
+          <div className={styles.noRoadmapContainer}>
+            <h2 className={styles.noRoadmapTitle}>No Learning Roadmap Found</h2>
+            <p className={styles.noRoadmapDescription}>
+              It looks like you haven't generated your personalized learning
+              roadmap yet. Click the button below to create one based on your
+              survey responses.
+            </p>
+            <button
+              onClick={generateRoadmap}
+              disabled={isGenerating}
+              className={styles.generateButton}
+            >
+              {isGenerating ? (
+                <>
+                  <div
+                    className={styles.loadingSpinner}
+                    style={{ width: "20px", height: "20px" }}
+                  ></div>
+                  Generating Your Roadmap...
+                </>
+              ) : (
+                "🚀 Generate My Learning Roadmap"
+              )}
+            </button>
+          </div>
+        </ProtectedRoute>
+      </div>
+    );
+  }
+
   return (
     <div className={styles.container}>
       {/* Header */}
@@ -81,56 +172,63 @@ export default function DashboardPage() {
         </div>
       </ProtectedRoute>
 
+      {/* Personalized Message */}
+      {roadmapData.personalizedMessage && (
+        <div className={styles.personalizedMessage}>
+          {roadmapData.personalizedMessage}
+        </div>
+      )}
+
       {/* Progress Card */}
       <div className={styles.card}>
         <div className={styles.cardHeader}>
-          Your Learning Path: Web Development
+          Your Learning Path: {roadmapData.learningPath}
         </div>
         <div className={styles.cardBody}>
           <div>
             <p className="font-medium text-gray-900 mb-1">
               You're making great progress!
             </p>
-            <p className={styles.subtext}>3 resources completed this week</p>
+            <p className={styles.subtext}>
+              {roadmapData.resources?.filter((r) => r.completed).length || 0} of{" "}
+              {roadmapData.resources?.length || 0} resources completed
+            </p>
           </div>
+
+          {roadmapData.weeklyGoal && (
+            <div className={styles.weeklyGoal}>
+              🎯 Weekly Goal: {roadmapData.weeklyGoal}
+            </div>
+          )}
 
           <div className="mt-6">
             <h3 className="text-sm font-medium text-gray-900">
               Current progress
             </h3>
             <div className={styles.progressBarWrapper}>
-              <div className={styles.progressBar}></div>
+              <div
+                className={styles.progressBar}
+                style={{ width: `${roadmapData.progressPercentage || 0}%` }}
+              ></div>
             </div>
-            <p className={styles.textGray}>45% complete</p>
+            <p className={styles.textGray}>
+              {roadmapData.progressPercentage || 0}% complete
+            </p>
           </div>
         </div>
       </div>
 
-      {/* Continue Learning Section */}
+      {/* Learning Resources Section */}
       <section className={styles.section}>
-        <h2 className={styles.headerSection}>Continue Learning</h2>
+        <h2 className={styles.headerSection}>Your Learning Resources</h2>
         <div className={styles.grid2Cols}>
-          {/* Card 1 */}
-          <div className={styles.cardSmall}>
-            <img
-              src="https://cdn-icons-png.flaticon.com/512/270/270798.png"
-              alt="React"
+          {roadmapData.resources?.map((resource, index) => (
+            <RoadmapCard
+              key={resource.id || index}
+              resource={resource}
+              onToggleComplete={updateResourceCompletion}
             />
-            <h4>React Basics</h4>
-            <p>Learn the fundamentals of React.js and build dynamic UIs.</p>
-            <button className={styles.buttonPrimary}>Continue</button>
-          </div>
-
-          {/* Card 2 */}
-          <div className={styles.cardSmall}>
-            <img
-              src="https://cdn-icons-png.flaticon.com/512/919/919825.png"
-              alt="JavaScript"
-            />
-            <h4>JavaScript Essentials</h4>
-            <p>Understand core JavaScript concepts for web development.</p>
-            <button className={styles.buttonPrimary}>Continue</button>
-          </div>
+          ))}
         </div>
       </section>
 
@@ -142,16 +240,30 @@ export default function DashboardPage() {
             <h4>Need a new roadmap?</h4>
             <p>
               Refresh your learning path to get updated recommendations based on
-              your goals.
+              your goals and progress.
             </p>
-            <button className={styles.buttonPrimary}>Regenerate</button>
+            <button
+              onClick={generateRoadmap}
+              disabled={isGenerating}
+              className={styles.regenerateButton}
+            >
+              {isGenerating ? "Regenerating..." : "🔄 Regenerate"}
+            </button>
           </div>
           <div className={styles.cardSmall}>
-            <h4>Customize your plan</h4>
+            <h4>Update your preferences</h4>
             <p>
-              Adjust your preferences to better tailor your learning experience.
+              Want to change your learning style or goals? Update your survey
+              responses first.
             </p>
-            <button className={styles.buttonPrimary}>Customize</button>
+            <button
+              onClick={() =>
+                (window.location.href = "/external/survey?edit=true")
+              }
+              className={styles.buttonPrimary}
+            >
+              Edit Survey
+            </button>
           </div>
         </div>
       </section>

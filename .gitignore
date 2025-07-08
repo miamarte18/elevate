@@ -33,6 +33,12 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 
+# setup documentation with sensitive info
+AI_ROADMAP_SETUP.md
+
+
+# database information 
+learning_roadmaps.sql
 # vercel
 .vercel
 
